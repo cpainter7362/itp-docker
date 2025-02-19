@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  fp-svc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      additional_contexts:
+        final-project: https://github.com/cpainter7362/itp-docker.git
+    container_name: fp-container
+    ports:
+      - "8081:7901"
+    volumes:
+      - ./volumes/final-project/config/nginx.conf:/etc/nginx/nginx.conf
+      - ./volumes/final-project/config/conf.d:/etc/nginx/conf.d
+
+  hp-svc:
+    image: nginx:latest
+    container_name: hp-container
+    volumes:
+      - ./volumes/home-page/config/nginx.conf:/etc/nginx/nginx.conf
+      - ./volumes/home-page/config/conf.d:/etc/nginx/conf.d
+      - ./volumes/home-page/home/html:/usr/share/nginx/html
+
+  watchdog-svc:
+    image: alpine:latest
+    container_name: watchdog-container
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
