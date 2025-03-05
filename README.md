@@ -25,7 +25,7 @@ When a request arrives at `localhost:8089`:
 - PHP scripts:
   - Source: `volumes/html` (same volume)
   - Processed by PHP-FPM via FastCGI
-  - Example: `/phpinfo` path serves PHP info page
+  - Example: `/phpinfo/` path serves PHP info page
 
 ## Setup Instructions
 
@@ -43,8 +43,8 @@ When a request arrives at `localhost:8089`:
 
 1. Repository Setup
    ```bash
-   git clone git@github.com:cpainter7362/itp-docker.git
-   cd your-repo-name
+   git clone https://github.com/cpainter7362/itp-docker.git
+   cd itp-docker
    git checkout -b php
    ```
 
@@ -111,16 +111,40 @@ The PHP service:
 
 ### Volume Mapping
 Both services mount the following volumes:
-- `./volumes/config/nginx.conf` → `/etc/nginx/nginx.conf`
 - `./volumes/config/conf.d` → `/etc/nginx/conf.d`
 - `./volumes/html` → `/usr/share/nginx/html`
+
+### Important Notes
+- When accessing the PHP info page, make sure to include the trailing slash: `/phpinfo/`
+- Without the trailing slash, NGINX will try to find a file named "phpinfo" instead of the index.php inside the directory
+- The link on the homepage has been configured to use the correct path with the trailing slash
+
+## File Structure
+
+```
+.
+├── docker-compose.yml      # Docker Compose configuration
+├── init.sh                 # Initialization script
+├── templates/              # Configuration templates
+│   ├── default.conf        # NGINX server configuration
+│   ├── home.html           # Homepage template
+│   └── phpinfo/            # PHP demo directory
+│       └── index.php       # PHP info script
+└── volumes/                # Mounted volumes (created by init.sh)
+    ├── config/             # NGINX configuration
+    │   └── conf.d/         # Server config files
+    └── html/               # Web content
+        ├── index.html      # Homepage
+        └── phpinfo/        # PHP demo directory
+            └── index.php   # PHP info script
+```
 
 ## Testing Instructions
 
 1. Fresh Installation Test
    ```bash
-   git clone git@github.com:cpainter7362/itp-docker.git
-   cd your-repo-name
+   git clone https://github.com/cpainter7362/itp-docker.git
+   cd itp-docker
    git checkout php
    ./init.sh
    docker-compose up -d
@@ -133,6 +157,22 @@ Both services mount the following volumes:
    - Verify PHP info page loads with purple styling
 
 ## Troubleshooting
+
+### Common Issues
+
+1. **PHP Page Not Found**: 
+   - Ensure you're using the trailing slash when accessing PHP directories
+   - Example: http://localhost:8089/phpinfo/
+
+2. **Configuration Issues**:
+   - Check that your default.conf contains the correct fastcgi_pass directive
+   - Ensure both containers are on the same Docker network
+
+3. **Volume Mounting Issues**:
+   - Make sure the volumes exist and have the correct permissions
+   - Run the init.sh script to recreate the volumes if needed
+
+### Diagnostic Commands
 
 Service Status:
 ```bash
@@ -153,6 +193,25 @@ docker-compose exec http-svc nginx -t
 PHP Connection Test:
 ```bash
 docker-compose exec http-svc curl php-svc:9000
+```
+
+File Permissions:
+```bash
+ls -la volumes/html/phpinfo/
+```
+
+### Advanced Debugging
+
+If you need to inspect the containers in more detail:
+
+NGINX Shell:
+```bash
+docker-compose exec http-svc sh
+```
+
+PHP Shell:
+```bash
+docker-compose exec php-svc sh
 ```
 
 **Note:** If you encounter issues with PHP execution, ensure the NGINX configuration correctly passes requests to the PHP service using the service name (php-svc) on port 9000.
