@@ -1,38 +1,21 @@
 services:
-  fp-svc:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      additional_contexts:
-        final-project: https://github.com/cpainter7362/playground.git
-    container_name: fp-container
-    ports:
-      - "8081:7901"
-    volumes:
-      - type: bind
-        source: ./volumes/final-project/config/nginx.conf
-        target: /etc/nginx/nginx.conf
-      - type: bind
-        source: ./volumes/final-project/config/conf.d
-        target: /etc/nginx/conf.d
-
-  hp-svc:
+  http-svc:
     image: nginx:latest
-    container_name: hp-container
+    container_name: http-container
+    ports:
+      - "8089:80"
     volumes:
       - type: bind
-        source: ./volumes/home-page/config/nginx.conf
-        target: /etc/nginx/nginx.conf
-      - type: bind
-        source: ./volumes/home-page/config/conf.d
+        source: ./volumes/config/conf.d
         target: /etc/nginx/conf.d
       - type: bind
-        source: ./volumes/home-page/home/html
+        source: ./volumes/html
         target: /usr/share/nginx/html
 
-  watchdog-svc:
-    image: alpine:latest
-    container_name: watchdog-container
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
+  php-svc:
+    image: php:8.1-fpm-alpine
+    container_name: php-container
+    volumes:
+      - type: bind
+        source: ./volumes/html
+        target: /usr/share/nginx/html
