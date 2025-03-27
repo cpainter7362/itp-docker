@@ -29,6 +29,34 @@ services:
       - type: bind
         source: ./volumes/home-page/home/html
         target: /usr/share/nginx/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - php_svc
+
+  php_svc:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    container_name: php-container
+    volumes:
+      - ./volumes/home-page/home/html:/usr/share/nginx/html
+    env_file:
+      - ./volumes/php_mysql.env
+    depends_on:
+      - db_svc
+
+  db_svc:
+    image: mysql:8.0.41
+    container_name: mysql-container
+    env_file:
+      - ./volumes/mysql/.env
+      - ./volumes/php_mysql.env
+    volumes:
+      - ./volumes/mysql/db_contents:/var/lib/mysql
+      - ./volumes/mysql/init_scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "3311:3306"
 
   watchdog-svc:
     image: alpine:latest

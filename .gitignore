@@ -1,1 +1,5 @@
+# Ignore environment files with sensitive information
+*.env
+
+# Ignore database contents and volumes directory
 volumes/
