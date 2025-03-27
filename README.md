@@ -1,128 +1,157 @@
-# ITP Docker Project
+ITP Docker Project with MySQL Integration
+Project Architecture
+Request Flow
+When a request arrives at localhost:8080:
 
-## Project Architecture
+The request is received by hp-svc (Home Page Service)
+For PHP processing:
 
-### Request Flow
-When a request arrives at `localhost:8081`:
-1. The request is received by `fp-svc` (Final Project Service)
-2. For root path ('/'):
-   - Request is proxied to `hp-svc` on port 6969
-   - Returns homepage with navigation link
-3. For '/itp-docker' path:
-   - `fp-svc` serves content directly from final project repository
+Request is passed to php_svc container
+PHP scripts connect to db_svc for data access
 
-### Service Connections
-- `fp-svc`: Nginx container exposing port 8081
-- `hp-svc`: Internal Nginx container on port 6969
-- Services communicate via Docker internal networking
-- `watchdog-svc`: Alpine container for debugging
 
-### HTML Sources
-- Homepage (`hp-svc`):
-  - Source: `volumes/home-page/home/html`
-  - Served on port 6969
-- Project Page (`fp-svc`):
-  - Source: Final project repository
-  - Served at `/itp-docker` path
+For '/todos' path:
 
-## Setup Instructions
+MySQL data is retrieved through PHP PDO
+Todo items are displayed from database
 
-### Prerequisites
-1. Docker Desktop
-   - Required for container management
-   - Install from docker.com/products/docker-desktop
-   - Must be running before starting
 
-2. Git
-   - Required for repository management
-   - Install from git-scm.com/downloads
 
-### Project Setup
+Service Connections
 
-1. Repository Setup
-   ```bash
-   git clone https://github.com/cpainter7362/itp-docker.git
-   cd itp-docker
-   ```
+hp-svc: Nginx container exposing port 8080
+php_svc: PHP-FPM container with MySQL support
+db_svc: MySQL database container on port 3311
+watchdog-svc: Alpine container for debugging
+Services communicate via Docker internal networking
 
-2. Initialize Project Structure
-   ```bash
-   ./scripts/init.sh
-   ```
-   This creates:
-   - Required directory structure
-   - Nginx configurations
-   - HTML templates
+Data Sources
 
-3. Start Services
-   ```bash
-   docker compose up -d
-   ```
+Database (db_svc):
 
-4. Verify Installation
-   - Browse to http://localhost:8081
-   - Should see homepage with project link
-   - Click link to access project page
+Source: MySQL 8.0.41 container
+Stores todo items in todos table
+Accessed through PHP PDO
 
-### Common Operations
 
+Web Content (hp-svc):
+
+Source: volumes/home-page/home/html
+Contains PHP scripts for database interaction
+
+
+
+Setup Instructions
+Prerequisites
+
+Docker Desktop
+
+Required for container management
+Install from docker.com/products/docker-desktop
+Must be running before starting
+
+
+Git
+
+Required for repository management
+Install from git-scm.com/downloads
+
+
+
+Project Setup
+
+Repository Setup
+bashCopygit clone https://github.com/cpainter7362/itp-docker.git
+cd itp-docker
+git checkout mysql
+
+Initialize Project Structure
+bashCopy./init.sh
+This creates:
+
+Required directory structure
+Nginx configurations
+MySQL initialization scripts
+Secure environment variables
+
+
+Start Services
+bashCopydocker-compose up -d
+
+Verify Installation
+
+Browse to http://localhost:8080
+Should see homepage with navigation links
+Visit /todos to see database content
+Visit /todos/mysql to test database connection
+
+
+
+Common Operations
 Start Services:
-```bash
-docker compose up -d
-```
-
+bashCopydocker-compose up -d
 Stop Services:
-```bash
-docker compose down
-```
-
+bashCopydocker-compose down
 View Logs:
-```bash
-docker compose logs
-```
-
+bashCopydocker-compose logs
 Reset Environment:
-```bash
-docker compose down
+bashCopydocker-compose down
 rm -rf volumes/
-./scripts/init.sh
-docker compose up -d
-```
+./init.sh
+docker-compose up -d
+Testing Instructions
 
-## Testing Instructions
+Fresh Installation Test
+bashCopygit clone https://github.com/cpainter7362/itp-docker.git
+cd itp-docker
+git checkout mysql
+./init.sh
+docker-compose up -d
 
-1. Fresh Installation Test
-   ```bash
-   git clone https://github.com/cpainter7362/itp-docker.git
-   cd itp-docker
-   ./scripts/init.sh
-   docker compose up -d
-   ```
+Verification Steps
 
-2. Verification Steps
-   - Navigate to http://localhost:8081
-   - Verify homepage loads
-   - Click project link
-   - Verify project page loads
+Navigate to http://localhost:8080
+Verify homepage loads
+Click "Todo App" link
+Verify database items display
+Click "MySQL Connection Test" link
+Verify successful connection details
 
-## Troubleshooting
 
+
+MySQL Integration
+Database Configuration
+
+Container: MySQL 8.0.41
+Port: 3311 (externally accessible)
+Security: Auto-generated passwords
+Database: php_app
+Default Table: todos
+
+PHP Connectivity
+
+PDO MySQL extension installed
+Connection parameters via environment variables
+Error handling with proper exception management
+
+Data Persistence
+
+Volume mapping for database files
+SQL initialization scripts for structure
+Sample data loaded at first startup
+
+Troubleshooting
 Service Status:
-```bash
-docker compose ps
-```
-
+bashCopydocker-compose ps
 Container Logs:
-```bash
-docker compose logs fp-svc
-docker compose logs hp-svc
-```
-
+bashCopydocker-compose logs db_svc
+docker-compose logs php_svc
+docker-compose logs hp-svc
+Database Connection:
+bashCopydocker exec -it mysql-container mysql -u php_agent -p
+# Password in volumes/php_mysql.env
 Network Testing:
-```bash
-docker compose exec watchdog-svc sh
-wget -qO- http://hp-svc:6969
-wget -qO- http://fp-svc:7901
-```
-
-**Note:** Following these instructions exactly should result in a fully functional application. Any deviation may result in setup failure.
+bashCopydocker-compose exec watchdog-svc sh
+wget -qO- http://hp-svc:80
+wget -qO- http://db_svc:3306
+Note: Following these instructions exactly should result in a fully functional application with MySQL integration. Any deviation may result in setup failure.
